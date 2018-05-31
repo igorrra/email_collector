@@ -47,12 +47,17 @@ else:
 def list_tables():
     """Show available tables."""
     cur = DB.cursor()
-    cur.execute('show tables')
-    logging.debug('Called "show tables" command')
-    rows = [dict((cur.description[i][0], value)
-                 for i, value in enumerate(row)) for row in cur.fetchall()]
-    cur.close()
-    return jsonify({'myCollection': rows})
+    cmd = 'show tables'
+    try:
+        cur.execute(cmd)
+        logging.debug('Calling "%s" command', cmd)
+        rows = [dict((cur.description[i][0], value)
+                     for i, value in enumerate(row)) for row in cur.fetchall()]
+        cur.close()
+        return jsonify({'myCollection': rows})
+    except mysql.connector.Error as err:
+        logging.warning('Something went wrong: %s', err)
+        DB.rollback()
 
 
 @APP.route('/api/v1/tables/<table_name>', methods=['GET'])
@@ -61,9 +66,10 @@ def get_table(table_name):
     if table_name not in TABLES:
         abort(400)
     cur = DB.cursor()
-
+    cmd = 'SELECT * FROM %s' % (table_name, )
     try:
-        cur.execute('SELECT * FROM %s' % (table_name, ))
+        logging.debug('Calling "%s" command', cmd)
+        cur.execute(cmd)
         rows = [dict((cur.description[i][0], value)
                      for i, value in enumerate(row)) for row in cur.fetchall()]
         cur.close()
@@ -80,4 +86,4 @@ def not_found(error):
 
 
 if __name__ == '__main__':
-    APP.run()
+    APP.run(debug=True)
