@@ -16,6 +16,6 @@ $ pip install -r requirements.txt
 
 $ chmod a+x app.py
 
-Run the API:
+4. Run the API:
 
 $ ./app.py
