@@ -29,7 +29,7 @@ DB = MYSQL.connect()
 
 TABLES = [
     'attachments', 'metadata', 'recipients',
-    'metadata_attachments', 'metadata_recepients'
+    'metadata_attachments', 'metadata_recipients'
 ]
 
 LOG_CONF_PATH = './log.conf'
