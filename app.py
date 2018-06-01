@@ -27,7 +27,10 @@ APP.config['MYSQL_DATABASE_HOST'] = 'localhost'
 MYSQL.init_app(APP)
 DB = MYSQL.connect()
 
-TABLES = ['attachments', 'metadata']
+TABLES = [
+    'attachments', 'metadata', 'recipients',
+    'metadata_attachments', 'metadata_recepients'
+]
 
 LOG_CONF_PATH = './log.conf'
 
@@ -46,14 +49,13 @@ else:
 @APP.route('/api/v1/tables', methods=['GET'])
 def list_tables():
     """Show available tables."""
-    cur = DB.cursor()
     cmd = 'show tables'
     try:
-        cur.execute(cmd)
+        with DB.cursor() as cur:
+            cur.execute(cmd)
         logging.debug('Calling "%s" command', cmd)
         rows = [dict((cur.description[i][0], value)
                      for i, value in enumerate(row)) for row in cur.fetchall()]
-        cur.close()
         return jsonify({'myCollection': rows})
     except mysql.connector.Error as err:
         logging.warning('Something went wrong: %s', err)
@@ -65,14 +67,13 @@ def get_table(table_name):
     """Show contents of specified table."""
     if table_name not in TABLES:
         abort(400)
-    cur = DB.cursor()
     cmd = 'SELECT * FROM %s' % (table_name, )
     try:
         logging.debug('Calling "%s" command', cmd)
-        cur.execute(cmd)
+        with DB.cursor() as cur:
+            cur.execute(cmd)
         rows = [dict((cur.description[i][0], value)
                      for i, value in enumerate(row)) for row in cur.fetchall()]
-        cur.close()
         return jsonify({'myCollection': rows})
     except mysql.connector.Error as err:
         logging.warning('Something went wrong: %s', err)
