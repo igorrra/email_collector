@@ -12,7 +12,7 @@ import logging.config
 
 import mysql.connector
 
-from flask import Flask, jsonify, abort, make_response
+from flask import abort, Flask, jsonify, make_response, request
 from flaskext.mysql import MySQL
 
 APP = Flask(__name__)
@@ -78,6 +78,21 @@ def get_table(table_name):
     except mysql.connector.Error as err:
         logging.warning('Something went wrong: %s', err)
         DB.rollback()
+
+
+@APP.route('/todo/api/v1.0/tables', methods=['POST'])
+def add_email():
+    """Create new entry."""
+    if not isinstance(request, str):
+        abort(400)
+    task = {
+        'id': tasks[-1]['id'] + 1,
+        'title': request.json['title'],
+        'description': request.json.get('description', ""),
+        'done': False
+    }
+    tasks.append(task)
+    return jsonify({'task': task}), 201
 
 
 @APP.errorhandler(404)
