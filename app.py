@@ -10,29 +10,23 @@ import logging
 
 import logging.config
 
-import mysql.connector
-
-from flask import abort, Flask, jsonify, make_response, request
 from flaskext.mysql import MySQL
 
+from flask import Flask, flash, jsonify, make_response, request, redirect
+from werkzeug.utils import secure_filename
+
+from db_handler import show_tables, show_table, write_data
+from parse_email import parse_raw_email
+
 APP = Flask(__name__)
+APP.config.from_object('config.Config')
 MYSQL = MySQL()
-
-# MySQL configurations
-APP.config['MYSQL_DATABASE_USER'] = 'root'
-APP.config['MYSQL_DATABASE_PASSWORD'] = 'password'
-APP.config['MYSQL_DATABASE_DB'] = 'email_collector'
-APP.config['MYSQL_DATABASE_HOST'] = 'localhost'
-
 MYSQL.init_app(APP)
 DB = MYSQL.connect()
 
-TABLES = [
-    'attachments', 'metadata', 'recipients',
-    'metadata_attachments', 'metadata_recipients'
-]
-
 LOG_CONF_PATH = './log.conf'
+ALLOWED_EXTENSIONS = {'msg', 'txt'}
+
 
 if os.path.exists(LOG_CONF_PATH):
     logging.config.fileConfig('log.conf')
@@ -46,53 +40,57 @@ else:
     )
 
 
-@APP.route('/api/v1/tables', methods=['GET'])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@APP.route('/api/v1.0/tables', methods=['GET'])
 def list_tables():
     """Show available tables."""
-    cmd = 'show tables'
-    try:
-        with DB.cursor() as cur:
-            cur.execute(cmd)
-        logging.debug('Calling "%s" command', cmd)
-        rows = [dict((cur.description[i][0], value)
-                     for i, value in enumerate(row)) for row in cur.fetchall()]
-        return jsonify({'myCollection': rows})
-    except mysql.connector.Error as err:
-        logging.warning('Something went wrong: %s', err)
-        DB.rollback()
+    logging.info('List all tables called')
+    return jsonify({'AvailableTables': show_tables(DB)})
 
 
-@APP.route('/api/v1/tables/<table_name>', methods=['GET'])
+@APP.route('/api/v1.0/tables/<table_name>', methods=['GET'])
 def get_table(table_name):
     """Show contents of specified table."""
-    if table_name not in TABLES:
-        abort(400)
-    cmd = 'SELECT * FROM %s' % (table_name, )
-    try:
-        logging.debug('Calling "%s" command', cmd)
-        with DB.cursor() as cur:
-            cur.execute(cmd)
-        rows = [dict((cur.description[i][0], value)
-                     for i, value in enumerate(row)) for row in cur.fetchall()]
-        return jsonify({'myCollection': rows})
-    except mysql.connector.Error as err:
-        logging.warning('Something went wrong: %s', err)
-        DB.rollback()
+    logging.info('Show "%s" table called', table_name)
+    return jsonify({'TableContents': show_table(DB, table_name)})
 
 
-@APP.route('/todo/api/v1.0/tables', methods=['POST'])
+@APP.route('/api/v1.0/upload', methods=['GET', 'POST'])
 def add_email():
     """Create new entry."""
-    if not isinstance(request, str):
-        abort(400)
-    task = {
-        'id': tasks[-1]['id'] + 1,
-        'title': request.json['title'],
-        'description': request.json.get('description', ""),
-        'done': False
-    }
-    tasks.append(task)
-    return jsonify({'task': task}), 201
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        uploaded_file = request.files['file']
+
+        if uploaded_file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if uploaded_file and allowed_file(uploaded_file.filename):
+            filename = secure_filename(uploaded_file.filename)
+            uploaded_file.save(os.path.join(APP.config['UPLOAD_FOLDER'], filename))
+            parsed = parse_raw_email(os.path.join(APP.config['UPLOAD_FOLDER'], filename))
+            if parsed.get('from'):
+                logging.info('Email was parsed successfully')
+            else:
+                logging.error('Something went wrong')
+            result = write_data(DB, parsed)
+            print result
+            return jsonify({'Response': 'Email was parsed successfully'})
+    return '''
+        <!doctype html>
+        <title>Upload new File</title>
+        <h1>Upload new File</h1>
+        <form method=post enctype=multipart/form-data>
+          <input type=file name=file>
+          <input type=submit value=Upload>
+        </form>
+        '''
 
 
 @APP.errorhandler(404)
@@ -102,4 +100,4 @@ def not_found(error):
 
 
 if __name__ == '__main__':
-    APP.run(debug=True)
+    APP.run()
