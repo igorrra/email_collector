@@ -6,6 +6,7 @@ from, to, subject, timestamp, body, html, attachments
 
 import hashlib
 import os
+import re
 import time
 import uuid
 
@@ -21,6 +22,7 @@ import dateutil.parser
 
 ATT_TEMPLATE = '%s/%s'
 PATH = 'attachments/%s' % (str(uuid.uuid4()),)
+ADDR_FIELDS = ['To', 'Cc', 'Bcc']
 
 
 class NotSupportedMailFormat(Exception):
@@ -87,13 +89,20 @@ def parse_raw_email(path):
                     'replace'
                 ).encode('utf8', 'replace')
 
+        recipients = []
+        for address in ADDR_FIELDS:
+            if msgobj.get(address):
+                recipient = re.findall(r'[\w\.,]+@[\w\.,]+\.\w+', msgobj.get(address))
+                for item in recipient:
+                    recipients.append(item)
+
         return {
             'subject': subject,
             'timestamp': timestamp,
             'body': body,
             'html': html,
             'from': parseaddr(msgobj.get('From'))[1],
-            'to': parseaddr(msgobj.get('To'))[1],
+            'to': recipients,
             'attachments': attachments
         }
 
