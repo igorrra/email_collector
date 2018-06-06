@@ -1,11 +1,15 @@
 -- Schema for `attachments` table
 
 CREATE TABLE IF NOT EXISTS `email_collector`.`attachments` (
-	`id`	INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-	`md5`	CHAR(32) NOT NULL COMMENT 'Email\'s MD5 sum',
-	`path`	VARCHAR(64) COMMENT 'Path to the saved attachment on NFS',
+	`id`			INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`name` 			VARCHAR(255) NOT NULL COMMENT 'Attachment name',
+	`content_type` 		VARCHAR(32) NOT NULL COMMENT 'Attachment content type',
+	`md5`			CHAR(32) NOT NULL COMMENT 'Email\'s MD5 sum',
+	`path`			NVARCHAR(260) COMMENT 'Path to the saved attachment on NFS',
+	`metadata_id` 		INT(10) UNSIGNED NOT NULL COMMENT 'Metadata id',
 	PRIMARY KEY (`id`),
 	UNIQUE KEY (`md5`),
 	UNIQUE KEY (`path`),
+	FOREIGN KEY (`metadata_id`) REFERENCES `email_collector`.`metadata` (`id`),
 	INDEX `path_idx` (`path` ASC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
