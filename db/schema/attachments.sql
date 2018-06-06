@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS `email_collector`.`attachments` (
 	`path`			NVARCHAR(260) COMMENT 'Path to the saved attachment on NFS',
 	`metadata_id` 		INT(10) UNSIGNED NOT NULL COMMENT 'Metadata id',
 	PRIMARY KEY (`id`),
-	FOREIGN KEY (`metadata_id`) REFERENCES `email_collector`.`metadata` (`id`),
+	FOREIGN KEY (`metadata_id`) REFERENCES `email_collector`.`metadata` (`id`) ON DELETE CASCADE,
 	INDEX `path_idx` (`path` ASC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

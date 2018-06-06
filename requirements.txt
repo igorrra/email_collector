@@ -1,4 +1,4 @@
 flask
 flask-mysql
 flask-restful
-mysql-connector-python-rf
+mysqlclient
