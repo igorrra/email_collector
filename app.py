@@ -4,7 +4,7 @@
 RESTful API for email collector
 """
 
-
+import argparse
 import os
 import logging
 
@@ -15,7 +15,7 @@ from flaskext.mysql import MySQL
 from flask import Flask, flash, jsonify, make_response, request, redirect
 from werkzeug.utils import secure_filename
 
-from db_handler import show_tables, show_table, write_data
+from db_handler import show_tables, show_table, add_data, retrieve_data
 from parse_email import parse_raw_email
 
 APP = Flask(__name__)
@@ -27,17 +27,7 @@ DB = MYSQL.connect()
 LOG_CONF_PATH = './log.conf'
 ALLOWED_EXTENSIONS = {'msg', 'txt'}
 
-
-if os.path.exists(LOG_CONF_PATH):
-    logging.config.fileConfig('log.conf')
-else:
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)s: %(message)s',
-        datefmt='%m.%d.%Y %H:%M:%S',
-        filename='try_logging_no_config_file.log',
-        filemode='w',
-        level=logging.DEBUG
-    )
+logging.config.fileConfig('log.conf')
 
 
 def allowed_file(filename):
@@ -49,15 +39,22 @@ def allowed_file(filename):
 @APP.route('/api/v1.0/tables', methods=['GET'])
 def list_tables():
     """Show available tables."""
-    logging.info('List all tables called')
+    logging.debug('List all tables called')
     return jsonify({'AvailableTables': show_tables(DB)})
 
 
 @APP.route('/api/v1.0/tables/<table_name>', methods=['GET'])
 def get_table(table_name):
     """Show contents of specified table."""
-    logging.info('Show "%s" table called', table_name)
+    logging.debug('Show "%s" table called', table_name)
     return jsonify({'TableContents': show_table(DB, table_name)})
+
+
+@APP.route('/api/v1.0/report', methods=['GET'])
+def get_data():
+    """Show contents of all joined tables."""
+    logging.debug('Show all joined tables. called')
+    return jsonify({'TableContents': retrieve_data(DB)})
 
 
 @APP.route('/api/v1.0/upload', methods=['GET', 'POST'])
@@ -75,12 +72,14 @@ def add_email():
         if uploaded_file and allowed_file(uploaded_file.filename):
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(APP.config['UPLOAD_FOLDER'], filename))
+            logging.debug('email file saved into %s', APP.config['UPLOAD_FOLDER'])
             parsed = parse_raw_email(os.path.join(APP.config['UPLOAD_FOLDER'], filename))
             if parsed.get('from'):
                 logging.info('Email was parsed successfully')
             else:
                 logging.error('Something went wrong')
-            result = write_data(DB, parsed)
+            logging.debug('POST email data into corresponding tables called')
+            result = add_data(DB, parsed)
             print result
             return jsonify({'Response': 'Email was parsed successfully'})
     return '''
@@ -100,5 +99,21 @@ def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-H', '--host',
+                        default='127.0.0.1',
+                        help='Hostname for the Flask application')
+    parser.add_argument('-P', '--port',
+                        default='5000',
+                        help='Port for the Flask application')
+    parser.add_argument('-d', '--debug',
+                        action='store_true',
+                        help=argparse.SUPPRESS)
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    APP.run()
+    args = parse_args()
+    APP.run(debug=args.debug, host=args.host, port=args.port)

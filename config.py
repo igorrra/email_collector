@@ -1,7 +1,6 @@
 
 class Config(object):
     """Flask application configuration"""
-    DEBUG = True
     DEVELOPMENT = True
     SECRET_KEY = 'super secret key'
     SESSION_TYPE = 'filesystem'
