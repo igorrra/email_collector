@@ -66,7 +66,6 @@ def post_data(db_connection, params):
                           params.get('body'), params.get('html'),
                           params.get('timestamp'))
         try:
-            print metadata_cmd
             cur.execute(metadata_cmd)
         except pymysql.err.InternalError as error:
             db_connection.rollback()
@@ -79,7 +78,6 @@ def post_data(db_connection, params):
                               '(recipient, metadata_id) ' \
                               'VALUES (\'%s\', \'%s\')' \
                               % (recipient, last_id)
-            print recipients_cmd
             cur.execute(recipients_cmd)
 
         for attachment in params.get('attachments'):
@@ -88,7 +86,6 @@ def post_data(db_connection, params):
                   'VALUES (\'%s\', \'%s\',\'%s\', \'%s\', \'%s\')' \
                   % (attachment.name, attachment.content_type,
                      attachment.md5, attachment.path, last_id)
-            print attachments_cmd
             try:
                 cur.execute(attachments_cmd)
             except pymysql.err.InternalError as error:
