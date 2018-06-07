@@ -19,6 +19,7 @@ $ chmod a+x app.py
 4. Create 'email_collector' database structure:
 
 $ cd db
+
 mysql> source CREATE_DB.sql
 
 5.Run the API:
