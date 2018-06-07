@@ -1,3 +1,4 @@
+configparser
 flask
 flask-mysql
 flask-restful
