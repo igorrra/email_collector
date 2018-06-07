@@ -33,4 +33,8 @@ optional arguments:
   -P PORT, --port PORT  Port for the Flask application
 
 
+Also, a hidden argument can be used:
+
+--debug
+
 $ ./run.py --host=127.0.0.1 --port=5000 --debug
