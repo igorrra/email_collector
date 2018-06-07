@@ -24,4 +24,13 @@ mysql> source CREATE_DB.sql
 
 5.Run the API:
 
-$ ./run.py
+./run.py -h
+usage: run.py [-h] [-H HOST] [-P PORT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -H HOST, --host HOST  Hostname for the Flask application
+  -P PORT, --port PORT  Port for the Flask application
+
+
+$ ./run.py --host=127.0.0.1 --port=5000 --debug
