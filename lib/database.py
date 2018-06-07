@@ -113,7 +113,6 @@ def put_data(db_connection, data_id, params):
     """Update specified data in database."""
     non_existent = []
     response = join_report(db_connection, data_id)
-    print response
     if response:
         for key in params.keys():
             if key not in response[0]:
