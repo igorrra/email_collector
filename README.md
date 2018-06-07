@@ -12,9 +12,9 @@ $ source venv/bin/activate
 
 $ pip install -r requirements.txt
 
-3. Make app.py file executable:
+3. Make run.py file executable:
 
-$ chmod a+x app.py
+$ chmod a+x run.py
 
 4. Create 'email_collector' database structure:
 

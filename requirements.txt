@@ -3,3 +3,4 @@ flask-mysql
 flask-restful
 mysqlclient
 pymysql
+python-dateutil
