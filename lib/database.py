@@ -33,7 +33,7 @@ def get_data(db_connection, table_name, data_id=None):
 def join_report(db_connection, data_id=None):
     """Show report with all data by joining all tables."""
     cmd = 'SELECT m.id metadata_id, sender, recipient, subject, body, ' \
-          'html, timestamp, name attachment, content_type attachment_type, ' \
+          'html, timestamp, attachment_name, content_type, ' \
           'path, md5 ' \
           'FROM metadata m ' \
           'JOIN attachments a ON m.id=a.metadata_id ' \
@@ -82,7 +82,7 @@ def post_data(db_connection, params):
 
         for attachment in params.get('attachments'):
             attachments_cmd = 'INSERT INTO attachments ' \
-                  '(name, content_type, md5, path, metadata_id) ' \
+                  '(attachment_name, content_type, md5, path, metadata_id) ' \
                   'VALUES (\'%s\', \'%s\',\'%s\', \'%s\', \'%s\')' \
                   % (attachment.name, attachment.content_type,
                      attachment.md5, attachment.path, last_id)
