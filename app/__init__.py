@@ -1,3 +1,5 @@
+"""Configuration module."""
+
 import logging.config
 
 from flask import Flask
