@@ -16,6 +16,11 @@ $ pip install -r requirements.txt
 
 $ chmod a+x app.py
 
-4. Run the API:
+4. Create 'email_collector' database structure:
 
-$ ./app.py
+$ cd db
+mysql> source CREATE_DB.sql
+
+5.Run the API:
+
+$ ./run.py
