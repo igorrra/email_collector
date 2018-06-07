@@ -17,7 +17,9 @@ from utils.email_parser import parse_raw_email
 from werkzeug.utils import secure_filename
 
 from app import ALLOWED_EXTENSIONS, app, db, logger
-from lib.database import get_data, post_data, delete_data, join_report
+from lib.database import (
+    get_data, post_data, delete_data, put_data, join_report
+)
 
 
 def allowed_file(filename):
@@ -31,7 +33,7 @@ def get_table(table_name):
     """Show contents of specified table."""
     if request.method == 'GET':
         logger.debug('Show "%s table called', table_name)
-        return jsonify(get_data(db, table_name))
+        return jsonify({'Response': get_data(db, table_name)})
 
 
 @app.route('/api/v1.0/tables/<table_name>/<data_id>',
@@ -40,18 +42,20 @@ def get_table_id(table_name, data_id):
     """Show contents of specified table."""
     if request.method == 'GET':
         logger.debug('Show "%s/%s" table called', table_name, data_id)
-        return jsonify(get_data(db, table_name, data_id))
+        return jsonify({'Response': get_data(db, table_name, data_id)})
+    elif request.method == 'PUT':
+        logger.debug('Update report by metadata id called')
+        return jsonify({'Response': put_data(db, data_id, request.json)})
     elif request.method == 'DELETE':
         logger.debug('Delete "%s/%s" table called', table_name, data_id)
-        result = delete_data(db, table_name, data_id)
-        return jsonify({'Response': result})
+        return jsonify({'Response': delete_data(db, table_name, data_id)})
 
 
 @app.route('/api/v1.0/email/report', methods=['GET'])
 def report():
     """Show contents of all joined tables."""
     logger.debug('Show aggregate report called')
-    return jsonify(join_report(db))
+    return jsonify({'Response': join_report(db)})
 
 
 @app.route('/api/v1.0/email/report/<metadata_id>',
@@ -60,11 +64,13 @@ def report_by_id(metadata_id):
     """Show contents of all joined tables."""
     if request.method == 'GET':
         logger.debug('Show report by metadata id called')
-        return jsonify(join_report(db, metadata_id))
+        return jsonify({'Response': join_report(db, metadata_id)})
+    elif request.method == 'PUT':
+        logger.debug('Update report by metadata id called')
+        return jsonify({'Response': put_data(db, metadata_id, request.json)})
     elif request.method == 'DELETE':
-        logger.debug('Delete "%s/%s" report called', metadata_id)
-        result = delete_data(db, 'metadata', metadata_id)
-        return jsonify({'Response': result})
+        logger.debug('Delete report for metadata id=%s called', metadata_id)
+        return jsonify({'Response': delete_data(db, 'metadata', metadata_id)})
 
 
 @app.route('/api/v1.0/email', methods=['GET', 'POST'])
@@ -86,19 +92,18 @@ def add_email():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
             uploaded_file.save(file_path)
             logger.debug('Uploaded email file was saved to %s',
-                          app.config['UPLOAD_FOLDER'])
+                         app.config['UPLOAD_FOLDER'])
             parsed = parse_raw_email(file_path)
             shutil.rmtree((app.config['UPLOAD_FOLDER']))
             if parsed and parsed.get('from'):
                 logger.info('Email was parsed successfully')
                 logger.debug('POST email data into corresponding tables')
-                result = post_data(db, parsed)
-                return jsonify({'Response': result})
-            else:
-                logger.error('Unsupported email content received')
-                return jsonify(
-                    {'Response': 'Unsupported email content received'}
-                )
+                return jsonify({'Response': post_data(db, parsed)})
+
+            logger.error('Unsupported email content received')
+            return jsonify(
+                {'Response': 'Unsupported email content received'}
+            )
     try:
         with open('app/templates/index.html', 'r') as index:
             content = index.read()
@@ -110,10 +115,11 @@ def add_email():
 @app.errorhandler(404)
 def not_found(error):
     """Not found error."""
-    return make_response(jsonify({'error': 'Not found'}), 404)
+    return make_response(jsonify({'Error': 'Not found'}), 404)
 
 
 def parse_args():
+    """Parsing arguments function."""
     parser = argparse.ArgumentParser()
     parser.add_argument('-H', '--host',
                         default='127.0.0.1',
@@ -129,5 +135,5 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    app.run(debug=args.debug, host=args.host, port=args.port)
+    ARGS = parse_args()
+    app.run(debug=ARGS.debug, host=ARGS.host, port=ARGS.port)
