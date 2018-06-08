@@ -10,6 +10,8 @@ import shutil
 
 import logging.config
 
+from ConfigParser import ConfigParser
+
 from flask import Flask, Response
 from flask import flash, jsonify, make_response, redirect, request
 
@@ -21,30 +23,43 @@ from lib.database import (
     get_data, post_data, delete_data, put_data, join_report
 )
 
+CONFIG_PATH = 'config/config.cfg'
+ALLOWED_EMAIL_EXTENSIONS = {'msg', 'txt'}
+
+config = ConfigParser()
+config.read(CONFIG_PATH)
+
 app = Flask(__name__)
-app.config.from_object('config.config.Config')
+
+app.config['DEVELOPMENT'] = config.get('flask', 'development')
+app.config['SECRET_KEY'] = config.get('flask', 'secret_key')
+app.config['SESSION_TYPE'] = config.get('flask', 'session_type')
+app.config['DB_HOST'] = config.get('flask', 'db_host')
+app.config['UPLOAD_FOLDER'] = config.get('flask', 'upload_folder')
+app.config['MYSQL_DATABASE_USER'] = config.get('mysql', 'user')
+app.config['MYSQL_DATABASE_PASSWORD'] = config.get('mysql', 'password')
+app.config['MYSQL_DATABASE_DB'] = config.get('mysql', 'db')
+app.config['MYSQL_DATABASE_HOST'] = config.get('mysql', 'host')
+
 mysql = MySQL()
 mysql.init_app(app)
 db = mysql.connect()
 
-LOG_CONF_PATH = './config/log.conf'
-ALLOWED_EXTENSIONS = {'msg', 'txt'}
-
-logging.config.fileConfig(LOG_CONF_PATH)
+logging.config.fileConfig(CONFIG_PATH)
 logger = logging.getLogger(__name__)
 
 
 def allowed_file(filename):
     """Check if uploaded file extension is allowed."""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EMAIL_EXTENSIONS
 
 
 @app.route('/api/v1.0/tables/<table_name>', methods=['GET'])
 def get_table(table_name):
     """Show contents of specified table."""
     if request.method == 'GET':
-        logger.debug('Show "%s table called', table_name)
+        logger.debug('Show "%s" table called', table_name)
         return jsonify({'Response': get_data(db, table_name)})
 
 
