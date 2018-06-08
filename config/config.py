@@ -1,3 +1,5 @@
+"""Flask application config class."""
+
 
 class Config(object):
     """Flask application configuration"""

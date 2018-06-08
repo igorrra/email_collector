@@ -5,21 +5,33 @@ RESTful API for email collector
 """
 
 import argparse
-
 import os
 import shutil
 
-from flask import (
-    flash, jsonify, make_response, Response, request, redirect
-)
+import logging.config
 
+from flask import Flask, Response
+from flask import flash, jsonify, make_response, redirect, request
+
+from flaskext.mysql import MySQL
 from utils.email_parser import parse_raw_email
 from werkzeug.utils import secure_filename
 
-from app import ALLOWED_EXTENSIONS, app, db, logger
 from lib.database import (
     get_data, post_data, delete_data, put_data, join_report
 )
+
+app = Flask(__name__)
+app.config.from_object('config.config.Config')
+mysql = MySQL()
+mysql.init_app(app)
+db = mysql.connect()
+
+LOG_CONF_PATH = './config/log.conf'
+ALLOWED_EXTENSIONS = {'msg', 'txt'}
+
+logging.config.fileConfig(LOG_CONF_PATH)
+logger = logging.getLogger(__name__)
 
 
 def allowed_file(filename):
