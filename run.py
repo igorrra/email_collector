@@ -20,7 +20,7 @@ from utils.email_parser import parse_raw_email
 from werkzeug.utils import secure_filename
 
 from lib.database import (
-    get_data, post_data, delete_data, put_data, join_report
+    post, delete, put, read
 )
 
 CONFIG_PATH = 'config/config.cfg'
@@ -54,58 +54,9 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EMAIL_EXTENSIONS
 
 
-@app.route('/api/v1.0/tables/<table_name>', methods=['GET'])
-def get_table(table_name):
-    """Show contents of specified table."""
-    if request.method == 'GET':
-        db = mysql.connect()
-        logger.debug('Show "%s" table called', table_name)
-        return jsonify({'Response': get_data(db, table_name)})
-
-
-@app.route('/api/v1.0/tables/<table_name>/<data_id>',
-           methods=['GET', 'DELETE', 'PUT'])
-def get_table_id(table_name, data_id):
-    """Show contents of specified table."""
-    db = mysql.connect()
-    if request.method == 'GET':
-        logger.debug('Show "%s/%s" table called', table_name, data_id)
-        return jsonify({'Response': get_data(db, table_name, data_id)})
-    elif request.method == 'PUT':
-        logger.debug('Update report by metadata id called')
-        return jsonify({'Response': put_data(db, data_id, request.json)})
-    elif request.method == 'DELETE':
-        logger.debug('Delete "%s/%s" table called', table_name, data_id)
-        return jsonify({'Response': delete_data(db, table_name, data_id)})
-
-
-@app.route('/api/v1.0/email/report', methods=['GET'])
-def report():
-    """Show contents of all joined tables."""
-    db = mysql.connect()
-    logger.debug('Show aggregate report called')
-    return jsonify({'Response': join_report(db)})
-
-
-@app.route('/api/v1.0/email/report/<metadata_id>',
-           methods=['GET', 'DELETE', 'PUT'])
-def report_by_id(metadata_id):
-    """Show contents of all joined tables."""
-    db = mysql.connect()
-    if request.method == 'GET':
-        logger.debug('Show report by metadata id called')
-        return jsonify({'Response': join_report(db, metadata_id)})
-    elif request.method == 'PUT':
-        logger.debug('Update report by metadata id called')
-        return jsonify({'Response': put_data(db, metadata_id, request.json)})
-    elif request.method == 'DELETE':
-        logger.debug('Delete report for metadata id=%s called', metadata_id)
-        return jsonify({'Response': delete_data(db, 'metadata', metadata_id)})
-
-
 @app.route('/api/v1.0/email', methods=['GET', 'POST'])
-def add_email():
-    """Create new entry."""
+def upload_email():
+    """Create new entries in database by parsing uploaded emails."""
     db = mysql.connect()
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -129,7 +80,7 @@ def add_email():
             if parsed and parsed.get('from'):
                 logger.info('Email was parsed successfully')
                 logger.debug('POST email data into corresponding tables')
-                return jsonify({'Response': post_data(db, parsed)})
+                return jsonify({'Response': post(db, parsed)})
 
             logger.error('Unsupported email content received')
             return jsonify(
@@ -141,6 +92,30 @@ def add_email():
     except IOError as exc:
         content = str(exc)
     return Response(content, mimetype="text/html")
+
+
+@app.route('/api/v1.0/email/read', methods=['GET'])
+def read_email():
+    """Show contents of all joined tables."""
+    db = mysql.connect()
+    logger.debug('Show aggregate report called')
+    return jsonify({'Response': read(db)})
+
+
+@app.route('/api/v1.0/email/read/<metadata_id>',
+           methods=['GET', 'DELETE', 'PUT'])
+def work_with_email_by_id(metadata_id):
+    """Show contents of all joined tables."""
+    db = mysql.connect()
+    if request.method == 'GET':
+        logger.debug('Show email for metadata id=%s called', metadata_id)
+        return jsonify({'Response': read(db, metadata_id)})
+    elif request.method == 'PUT':
+        logger.debug('Update email for metadata id=%s called', metadata_id)
+        return jsonify({'Response': put(db, metadata_id, request.json)})
+    elif request.method == 'DELETE':
+        logger.debug('Delete email for metadata id=%s called', metadata_id)
+        return jsonify({'Response': delete(db, 'metadata', metadata_id)})
 
 
 @app.errorhandler(404)
