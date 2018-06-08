@@ -1,29 +1,19 @@
-from flask import Flask
-
-from flaskext.mysql import MySQL
+"""Database connection decorator."""
 
 
-app = Flask(__name__)
-
-app.config.from_object('config.config.Config')
-mysql = MySQL()
-mysql.init_app(app)
-
-
-def with_connection(f):
-    def with_connection_(*args, **kwargs):
-        db_conn = mysql.connect()
+def db_connection_wrapper(func):
+    """Database connection decorator"""
+    def new_func(connection, *args, **kwargs):
+        """Return new decorated function."""
         try:
-            rv = f(db_conn, *args, **kwargs)
-            print rv
-        except Exception, e:
-            db_conn.rollback()
-            raise
+            value = func(connection, *args, **kwargs)
+        except Exception as error:
+            connection.rollback()
+            return str(error.args[-1])
         else:
-            db_conn.commit()
+            connection.commit()
         finally:
-            db_conn.close()
+            connection.close()
+        return value
 
-        return rv
-
-    return with_connection_
+    return new_func

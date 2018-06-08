@@ -43,7 +43,6 @@ app.config['MYSQL_DATABASE_HOST'] = config.get('mysql', 'host')
 
 mysql = MySQL()
 mysql.init_app(app)
-db = mysql.connect()
 
 logging.config.fileConfig(CONFIG_PATH)
 logger = logging.getLogger(__name__)
@@ -59,6 +58,7 @@ def allowed_file(filename):
 def get_table(table_name):
     """Show contents of specified table."""
     if request.method == 'GET':
+        db = mysql.connect()
         logger.debug('Show "%s" table called', table_name)
         return jsonify({'Response': get_data(db, table_name)})
 
@@ -67,6 +67,7 @@ def get_table(table_name):
            methods=['GET', 'DELETE', 'PUT'])
 def get_table_id(table_name, data_id):
     """Show contents of specified table."""
+    db = mysql.connect()
     if request.method == 'GET':
         logger.debug('Show "%s/%s" table called', table_name, data_id)
         return jsonify({'Response': get_data(db, table_name, data_id)})
@@ -81,6 +82,7 @@ def get_table_id(table_name, data_id):
 @app.route('/api/v1.0/email/report', methods=['GET'])
 def report():
     """Show contents of all joined tables."""
+    db = mysql.connect()
     logger.debug('Show aggregate report called')
     return jsonify({'Response': join_report(db)})
 
@@ -89,6 +91,7 @@ def report():
            methods=['GET', 'DELETE', 'PUT'])
 def report_by_id(metadata_id):
     """Show contents of all joined tables."""
+    db = mysql.connect()
     if request.method == 'GET':
         logger.debug('Show report by metadata id called')
         return jsonify({'Response': join_report(db, metadata_id)})
@@ -103,6 +106,7 @@ def report_by_id(metadata_id):
 @app.route('/api/v1.0/email', methods=['GET', 'POST'])
 def add_email():
     """Create new entry."""
+    db = mysql.connect()
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
