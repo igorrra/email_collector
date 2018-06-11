@@ -13,9 +13,10 @@ from StringIO import StringIO
 from email.utils import parseaddr
 
 import dateutil.parser
-from email.Header import decode_header
-
 import email
+import MySQLdb
+
+from email.Header import decode_header
 
 ATT_TEMPLATE = '%s/%s'
 ATT_PATH = 'attachments/'
@@ -50,8 +51,8 @@ def parse_raw_email(path):
         return {
             'subject': subject,
             'timestamp': timestamp,
-            'body': body,
-            'html': html,
+            'body': MySQLdb.escape_string(body),
+            'html': MySQLdb.escape_string(html),
             'from': parseaddr(msgobj.get('From'))[1],
             'to': recipients,
             'attachments': attachments
@@ -104,22 +105,23 @@ def parse_content(msgobj):
     html = None
 
     for part in msgobj.walk():
-        if part.get_content_type() == 'text/plain':
-            if body is None:
-                body = ""
-            body += unicode(
-                part.get_payload(decode=True),
-                part.get_content_charset(),
-                'replace'
-            ).encode('utf8', 'replace')
-        elif part.get_content_type() == 'text/html':
-            if html is None:
-                html = ""
-            html += unicode(
-                part.get_payload(decode=True),
-                part.get_content_charset(),
-                'replace'
-            ).encode('utf8', 'replace')
+        if not part.is_multipart():
+            if part.get_content_type() == 'text/plain':
+                if not body:
+                    body = ""
+                body += unicode(
+                    part.get_payload(decode=True),
+                    part.get_content_charset(),
+                    'replace'
+                ).encode('utf8', 'replace')
+            elif part.get_content_type() == 'text/html':
+                if not html:
+                    html = ""
+                html += unicode(
+                    part.get_payload(decode=True),
+                    part.get_content_charset(),
+                    'replace'
+                ).encode('utf8', 'replace')
 
     return attachments, body, html
 
