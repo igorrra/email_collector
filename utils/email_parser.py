@@ -48,11 +48,16 @@ def parse_raw_email(path):
         subject, timestamp, recipients = parse_header(msgobj)
         attachments, body, html = parse_content(msgobj)
 
+        if body:
+            body = body.replace('\t', '').replace('\r', '').replace('\n', ' ')
+            body = MySQLdb.escape_string(body.rstrip())
+        html = MySQLdb.escape_string(html) if html else None
+
         return {
             'subject': subject,
             'timestamp': timestamp,
-            'body': MySQLdb.escape_string(body),
-            'html': MySQLdb.escape_string(html),
+            'body': body,
+            'html': html,
             'from': parseaddr(msgobj.get('From'))[1],
             'to': recipients,
             'attachments': attachments
