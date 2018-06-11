@@ -140,8 +140,6 @@ def parse_attachments(msgobj):
     u_id = str(uuid.uuid4())
     if not os.path.exists(ATT_PATH):
         os.mkdir(ATT_PATH)
-    if not os.path.exists(ATT_PATH + u_id):
-        os.mkdir(ATT_PATH + u_id)
 
     attachments = []
 
@@ -154,27 +152,32 @@ def parse_attachments(msgobj):
             if bool(content_disposition
                     and "attachment" in dispositions[0].lower()):
 
+                if not os.path.exists(ATT_PATH + u_id):
+                    os.mkdir(ATT_PATH + u_id)
+
                 file_data = part.get_payload(decode=True)
+
                 attachment = StringIO(file_data)
                 attachment.content_type = part.get_content_type()
                 attachment.name = None
                 attachment.path = None
                 attachment.md5 = None
 
-                for param in dispositions[1:]:
-                    name, value = param.split('=')
-                    name = name.lower()
+                name = decode_header(part.get_filename())
+                if name:
+                    file_name, charset = name[0]
+                    attachment.name = \
+                        file_name.decode(charset) if charset else file_name
 
-                    if 'filename' in name:
-                        attachment.name = value.replace('"', '')
-                        file_path = ATT_TEMPLATE % (
-                            ATT_PATH + u_id, attachment.name
-                        )
-                        with open(file_path, 'wb') as destination_file:
-                            destination_file.write(file_data)
-                        attachment.path = file_path
-                        md5_obj = hashlib.md5()
-                        md5_obj.update(file_data)
-                        attachment.md5 = md5_obj.hexdigest()
-                        attachments.append(attachment)
+                    file_path = ATT_TEMPLATE % (
+                        ATT_PATH + u_id, attachment.name
+                    )
+
+                    with open(file_path, 'wb') as destination_file:
+                        destination_file.write(file_data)
+                    attachment.path = file_path
+                    md5_obj = hashlib.md5()
+                    md5_obj.update(file_data)
+                    attachment.md5 = md5_obj.hexdigest()
+                    attachments.append(attachment)
     return attachments
