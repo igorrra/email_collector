@@ -14,8 +14,8 @@ def read(db_connection, data_id=None):
           'html, timestamp, attachment_name, content_type, ' \
           'path, md5 ' \
           'FROM metadata m ' \
-          'JOIN attachments a ON m.id=a.metadata_id ' \
-          'JOIN recipients r ON m.id=r.metadata_id'
+          'LEFT JOIN attachments a ON m.id=a.metadata_id ' \
+          'LEFT JOIN recipients r ON m.id=r.metadata_id'
     if data_id:
         cmd += ' WHERE m.id=%s' % (data_id, )
     else:
