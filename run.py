@@ -115,7 +115,7 @@ def work_with_email_by_id(metadata_id):
         return jsonify({'Response': put(db, metadata_id, request.json)})
     elif request.method == 'DELETE':
         logger.debug('Delete email for metadata id=%s called', metadata_id)
-        return jsonify({'Response': delete(db, 'metadata', metadata_id)})
+        return jsonify({'Response': delete(db, metadata_id)})
 
 
 @app.errorhandler(404)
