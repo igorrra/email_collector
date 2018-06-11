@@ -12,11 +12,12 @@ import uuid
 from StringIO import StringIO
 from email.utils import parseaddr
 
-import dateutil.parser
+from email.Header import decode_header
+
 import email
+import dateutil.parser
 import MySQLdb
 
-from email.Header import decode_header
 
 ATT_TEMPLATE = '%s/%s'
 ATT_PATH = 'attachments/'
@@ -40,18 +41,13 @@ def parse_raw_email(path):
     try:
         with open(path, 'r') as work_file:
             msgobj = email.message_from_file(work_file)
-            if 'MIME-Version' not in msgobj:
+            if 'Content-Type' not in msgobj:
                 raise NotSupportedMailFormat(
                     'Unsupported email content received'
                 )
 
         subject, timestamp, recipients = parse_header(msgobj)
         attachments, body, html = parse_content(msgobj)
-
-        if body:
-            body = body.replace('\t', '').replace('\r', '').replace('\n', ' ')
-            body = MySQLdb.escape_string(body.rstrip())
-        html = MySQLdb.escape_string(html) if html else None
 
         return {
             'subject': subject,
@@ -111,22 +107,28 @@ def parse_content(msgobj):
 
     for part in msgobj.walk():
         if not part.is_multipart():
-            if part.get_content_type() == 'text/plain':
-                if not body:
-                    body = ""
-                body += unicode(
-                    part.get_payload(decode=True),
-                    part.get_content_charset(),
+            payload = part.get_payload(decode=True)
+            charset = part.get_content_charset()
+            if payload and charset:
+                text = unicode(
+                    payload,
+                    charset,
                     'replace'
                 ).encode('utf8', 'replace')
-            elif part.get_content_type() == 'text/html':
-                if not html:
-                    html = ""
-                html += unicode(
-                    part.get_payload(decode=True),
-                    part.get_content_charset(),
-                    'replace'
-                ).encode('utf8', 'replace')
+                if part.get_content_type() == 'text/plain':
+                    if not body:
+                        body = ""
+                        body += text
+                elif part.get_content_type() == 'text/html':
+                    if not html:
+                        html = ""
+                        html += text
+
+    if body:
+        body = body.replace('\t', '').replace('\r', '').replace('\n', ' ')
+        body = MySQLdb.escape_string(body.rstrip())
+        body = ' '.join(body.split())
+    html = MySQLdb.escape_string(html) if html else None
 
     return attachments, body, html
 
@@ -165,7 +167,9 @@ def parse_attachments(msgobj):
 
                     if 'filename' in name:
                         attachment.name = value.replace('"', '')
-                        file_path = ATT_TEMPLATE % (ATT_PATH + u_id, attachment.name)
+                        file_path = ATT_TEMPLATE % (
+                            ATT_PATH + u_id, attachment.name
+                        )
                         with open(file_path, 'wb') as destination_file:
                             destination_file.write(file_data)
                         attachment.path = file_path
