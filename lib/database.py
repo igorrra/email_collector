@@ -4,6 +4,10 @@ Database handler module.
 Work with DB in order to store and retrieve requested data.
 """
 
+import collections
+
+import pprint
+
 from lib.decorators import db_connection_wrapper
 
 
@@ -23,11 +27,47 @@ def read(db_connection, data_id=None):
 
     cur = db_connection.cursor()
     cur.execute(cmd)
-    rows = [
-        dict((cur.description[i][0], value)
-             for i, value in enumerate(row)) for row in cur.fetchall()
-    ]
-    return rows
+    rows = cur.fetchall()
+
+    result = collections.defaultdict(list)
+
+    if rows:
+        for row in rows:
+            result[row['id']].append(row)
+        result_list = result.values()
+
+        final_result = []
+
+        for item in result_list:
+            recipients = set()
+            attachments = []
+            res = {
+                'attachments': [],
+                'id': item[0].get('id'),
+                'sender': item[0].get('sender'),
+                'subject': item[0].get('subject'),
+                'body': item[0].get('body'),
+                'timestamp': item[0].get('timestamp')
+            }
+            for row in item:
+                attachment = {
+                    'attachment_name': row.get('attachment_name'),
+                    'content_type': row.get('content_type'),
+                    'md5': row.get('md5'),
+                    'path': row.get('path')
+                }
+                attachments.append(attachment)
+                recipients.add(row.get('recipient'))
+
+                if attachment not in res['attachments']:
+                    res['attachments'].append(attachment)
+                res['recipients'] = list(recipients)
+
+            final_result.append(res)
+
+        return final_result
+    else:
+        return None
 
 
 @db_connection_wrapper

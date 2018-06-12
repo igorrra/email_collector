@@ -16,6 +16,7 @@ from flask import Flask, Response
 from flask import flash, jsonify, make_response, redirect, request
 
 from flaskext.mysql import MySQL
+from pymysql.cursors import DictCursor
 from utils.email_parser import parse_raw_email
 from werkzeug.utils import secure_filename
 
@@ -41,7 +42,7 @@ app.config['MYSQL_DATABASE_PASSWORD'] = config.get('mysql', 'password')
 app.config['MYSQL_DATABASE_DB'] = config.get('mysql', 'db')
 app.config['MYSQL_DATABASE_HOST'] = config.get('mysql', 'host')
 
-mysql = MySQL()
+mysql = MySQL(cursorclass=DictCursor)
 mysql.init_app(app)
 
 logging.config.fileConfig(CONFIG_PATH)
@@ -99,7 +100,7 @@ def read_email():
     """Show contents of all joined tables."""
     db = mysql.connect()
     logger.debug('Show aggregate report called')
-    return jsonify({'Response': read(db)})
+    return jsonify(read(db))
 
 
 @app.route('/api/v1.0/email/read/<metadata_id>',
@@ -109,13 +110,16 @@ def work_with_email_by_id(metadata_id):
     db = mysql.connect()
     if request.method == 'GET':
         logger.debug('Show email for metadata id=%s called', metadata_id)
-        return jsonify({'Response': read(db, metadata_id)})
+        result = read(db, metadata_id)
+        return jsonify(result)
     elif request.method == 'PUT':
         logger.debug('Update email for metadata id=%s called', metadata_id)
-        return jsonify({'Response': put(db, metadata_id, request.json)})
+        result = put(db, metadata_id, request.json)
+        return jsonify({'Response': result})
     elif request.method == 'DELETE':
         logger.debug('Delete email for metadata id=%s called', metadata_id)
-        return jsonify({'Response': delete(db, metadata_id)})
+        result = delete(db, metadata_id)
+        return jsonify({'Response': result})
 
 
 @app.errorhandler(404)
