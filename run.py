@@ -95,7 +95,7 @@ def upload_email():
     return Response(content, mimetype="text/html")
 
 
-@app.route('/api/v1.0/email/read', methods=['GET'])
+@app.route('/api/v1.0/email/all', methods=['GET'])
 def read_email():
     """Show contents of all joined tables."""
     db = mysql.connect()
@@ -103,7 +103,7 @@ def read_email():
     return jsonify(read(db))
 
 
-@app.route('/api/v1.0/email/read/<metadata_id>',
+@app.route('/api/v1.0/email/<metadata_id>',
            methods=['GET', 'DELETE', 'PUT'])
 def work_with_email_by_id(metadata_id):
     """Show contents of all joined tables."""
