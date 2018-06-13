@@ -40,7 +40,6 @@ def read(db_connection, data_id=None):
 
         for item in result_list:
             recipients = set()
-            attachments = []
             res = {
                 'attachments': [],
                 'id': item[0].get('id'),
@@ -56,7 +55,6 @@ def read(db_connection, data_id=None):
                     'md5': row.get('md5'),
                     'path': row.get('path')
                 }
-                attachments.append(attachment)
                 recipients.add(row.get('recipient'))
 
                 if attachment not in res['attachments']:
