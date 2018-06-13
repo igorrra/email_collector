@@ -48,14 +48,14 @@ def read(db_connection, data_id=None):
                 'body': item[0].get('body'),
                 'timestamp': item[0].get('timestamp')
             }
-            for row in item:
+            for sub_item in item:
                 attachment = {
-                    'attachment_name': row.get('attachment_name'),
-                    'content_type': row.get('content_type'),
-                    'md5': row.get('md5'),
-                    'path': row.get('path')
+                    'attachment_name': sub_item.get('attachment_name'),
+                    'content_type': sub_item.get('content_type'),
+                    'md5': sub_item.get('md5'),
+                    'path': sub_item.get('path')
                 }
-                recipients.add(row.get('recipient'))
+                recipients.add(sub_item.get('recipient'))
 
                 if attachment not in res['attachments']:
                     res['attachments'].append(attachment)
