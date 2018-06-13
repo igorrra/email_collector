@@ -55,7 +55,8 @@ def read(db_connection, data_id=None):
                 }
                 recipients.add(sub_item.get('recipient'))
 
-                if attachment not in res['attachments']:
+                if attachment['path'] \
+                        and attachment not in res['attachments']:
                     res['attachments'].append(attachment)
                 res['recipients'] = list(recipients)
 
