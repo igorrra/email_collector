@@ -162,6 +162,7 @@ def parse_attachments(msgobj):
                 attachment.name = None
                 attachment.path = None
                 attachment.md5 = None
+                attachment.size = None
 
                 name = decode_header(part.get_filename())
                 if name:
@@ -176,6 +177,7 @@ def parse_attachments(msgobj):
                     with open(file_path, 'wb') as destination_file:
                         destination_file.write(file_data)
                     attachment.path = file_path
+                    attachment.size = os.path.getsize(file_path)
                     md5_obj = hashlib.md5()
                     md5_obj.update(file_data)
                     attachment.md5 = md5_obj.hexdigest()

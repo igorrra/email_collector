@@ -13,7 +13,7 @@ from lib.decorators import db_connection_wrapper
 def read(db_connection, data_id=None):
     """Show report with all data by joining all tables."""
     cmd = 'SELECT m.id id, sender, recipient, subject, body, ' \
-          'timestamp, attachment_name, content_type, ' \
+          'timestamp, attachment_name, attachment_size, content_type, ' \
           'path, md5 ' \
           'FROM metadata m ' \
           'LEFT JOIN attachments a ON m.id=a.metadata_id ' \
@@ -48,8 +48,10 @@ def read(db_connection, data_id=None):
             for sub_item in item:
                 attachment = {
                     'attachment_name': sub_item.get('attachment_name'),
+                    'attachment_size': sub_item.get('attachment_size'),
                     'content_type': sub_item.get('content_type'),
-                    'md5': sub_item.get('md5')
+                    'md5': sub_item.get('md5'),
+                    'path': sub_item.get('path')
                 }
                 recipients.add(sub_item.get('recipient'))
 
@@ -91,12 +93,13 @@ def post(db_connection, params):
 
     for attachment in params.get('attachments'):
         attachments_cmd = 'INSERT INTO attachments ' \
-                          '(attachment_name, content_type, ' \
-                          'md5, path, metadata_id) ' \
-                          'VALUES (%s, %s, %s, %s, %s)'
+                          '(attachment_name, attachment_size, ' \
+                          'content_type, md5, path, metadata_id) ' \
+                          'VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(attachments_cmd,
-                    (attachment.name, attachment.content_type,
-                     attachment.md5, attachment.path, last_id))
+                    (attachment.name, attachment.size,
+                     attachment.content_type, attachment.md5, attachment.path,
+                     last_id))
 
     return 'Affected rows: %s' % (cur.rowcount,)
 
