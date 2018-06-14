@@ -12,7 +12,7 @@ import logging.config
 
 from ConfigParser import ConfigParser
 
-from flask import Flask, Response
+from flask import Flask
 from flask import flash, jsonify, make_response, redirect, request
 
 from flaskext.mysql import MySQL
@@ -55,7 +55,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EMAIL_EXTENSIONS
 
 
-@app.route('/api/v1.0/email', methods=['GET', 'POST'])
+@app.route('/api/v1/email', methods=['GET', 'POST'])
 def upload_email():
     """Create new entries in database by parsing uploaded emails."""
     db = mysql.connect()
@@ -81,45 +81,47 @@ def upload_email():
             if parsed and parsed.get('from'):
                 logger.info('Email was parsed successfully')
                 logger.debug('POST email data into corresponding tables')
-                return jsonify({'Response': post(db, parsed)})
+                result, st_code = post(db, parsed)
+                return make_response(jsonify({'Response': result}), st_code)
 
             logger.error('Unsupported email content received')
-            return jsonify(
-                {'Response': 'Unsupported email content received'}
-            )
+            return make_response(
+                jsonify({'Response': 'Unsupported email content received'}),
+                415)
     try:
         with open('app/templates/index.html', 'r') as index:
             content = index.read()
     except IOError as exc:
         content = str(exc)
-    return Response(content, mimetype="text/html")
+    return make_response(content, 200)
 
 
-@app.route('/api/v1.0/email/all', methods=['GET'])
+@app.route('/api/v1/email/all', methods=['GET'])
 def read_email():
     """Show contents of all joined tables."""
     db = mysql.connect()
     logger.debug('Show aggregate report called')
-    return jsonify(read(db))
+    result, st_code = read(db)
+    return make_response(jsonify(result), st_code)
 
 
-@app.route('/api/v1.0/email/<metadata_id>',
+@app.route('/api/v1/email/<metadata_id>',
            methods=['GET', 'DELETE', 'PUT'])
 def work_with_email_by_id(metadata_id):
     """Show contents of all joined tables."""
     db = mysql.connect()
     if request.method == 'GET':
         logger.debug('Show email for metadata id=%s called', metadata_id)
-        result = read(db, metadata_id)
-        return jsonify(result)
+        result, st_code = read(db, metadata_id)
+        return make_response(jsonify(result), st_code)
     elif request.method == 'PUT':
         logger.debug('Update email for metadata id=%s called', metadata_id)
-        result = put(db, metadata_id, request.json)
-        return jsonify({'Response': result})
+        result, st_code = put(db, metadata_id, request.json)
+        return make_response(jsonify({'Response': result}), st_code)
     elif request.method == 'DELETE':
         logger.debug('Delete email for metadata id=%s called', metadata_id)
-        result = delete(db, metadata_id)
-        return jsonify({'Response': result})
+        result, st_code = delete(db, metadata_id)
+        return make_response(jsonify({'Response': result}), st_code)
 
 
 @app.errorhandler(404)

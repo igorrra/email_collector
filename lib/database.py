@@ -68,9 +68,9 @@ def read(db_connection, data_id=None):
 
             result.append(res)
 
-        return result
+        return result, 200
 
-    return 'Specified id does not exist'
+    return {'Error': 'Not found'}, 404
 
 
 @db_connection_wrapper
@@ -108,7 +108,7 @@ def post(db_connection, params):
                      attachment.content_type, attachment.md5, attachment.path,
                      last_id))
 
-    return 'Affected rows: %s' % (cur.rowcount,)
+    return 'Affected rows: %s' % (cur.rowcount,), 201
 
 
 @db_connection_wrapper
@@ -119,7 +119,7 @@ def delete(db_connection, data_id):
                  'WHERE id=%s'
     cur.execute(delete_cmd, (data_id,))
 
-    return 'Affected rows: %s' % (cur.rowcount,)
+    return 'Affected rows: %s' % (cur.rowcount,), 204
 
 
 @db_connection_wrapper
@@ -128,7 +128,7 @@ def put(db_connection, data_id, params):
     cur = db_connection.cursor()
     for key in params.keys():
         if key in RESTRICTED_COLUMNS:
-            return 'Columns: %s are not editable' % RESTRICTED_COLUMNS
+            return 'Columns: %s are not editable' % RESTRICTED_COLUMNS, 400
         put_cmd = 'UPDATE metadata m ' \
                   'LEFT JOIN attachments a ON m.id=a.metadata_id ' \
                   'LEFT JOIN  recipients r ON m.id=r.metadata_id ' \
@@ -136,4 +136,4 @@ def put(db_connection, data_id, params):
                   % (key, params[key], data_id)
         cur.execute(put_cmd)
 
-    return 'Affected rows: %s' % (cur.rowcount,)
+    return 'Affected rows: %s' % (cur.rowcount,), 200
