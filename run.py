@@ -105,7 +105,7 @@ def read_email():
     return make_response(jsonify(result), st_code)
 
 
-@app.route('/api/v1/email/<metadata_id>',
+@app.route('/api/v1/email/<int:metadata_id>',
            methods=['GET', 'DELETE', 'PUT'])
 def work_with_email_by_id(metadata_id):
     """Show contents of all joined tables."""

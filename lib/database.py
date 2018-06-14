@@ -70,7 +70,7 @@ def read(db_connection, data_id=None):
 
         return result, 200
 
-    return {'Error': 'Not found'}, 404
+    return {"Error": "Not found"}, 404
 
 
 @db_connection_wrapper
