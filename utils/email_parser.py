@@ -149,8 +149,8 @@ def parse_attachments(msgobj):
 
         if content_disposition:
             dispositions = content_disposition.strip().split(";")
-            if bool(content_disposition
-                    and "attachment" in dispositions[0].lower()):
+            if content_disposition \
+                    and 'attachment' or 'inline' in dispositions[0].lower():
 
                 if not os.path.exists(ATT_PATH + u_id):
                     os.mkdir(ATT_PATH + u_id)
@@ -164,12 +164,19 @@ def parse_attachments(msgobj):
                 attachment.md5 = None
                 attachment.size = None
 
-                name = decode_header(part.get_filename())
-                if name:
+                try:
+                    name = decode_header(part.get_filename())
                     file_name, charset = name[0]
                     attachment.name = \
                         file_name.decode(charset) if charset else file_name
+                except UnicodeEncodeError:
+                    for param in dispositions[1:]:
+                        name, value = param.split('=')
+                        name = name.lower()
+                        if 'filename' in name:
+                            attachment.name = value.replace('"', '')
 
+                if attachment.name:
                     file_path = ATT_TEMPLATE % (
                         ATT_PATH + u_id, attachment.name
                     )
