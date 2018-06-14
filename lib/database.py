@@ -10,7 +10,8 @@ from lib.decorators import db_connection_wrapper
 
 
 RESTRICTED_COLUMNS = [
-    'attachment_name', 'attachment_size', 'content_type', 'md5', 'path'
+    'recipient', 'attachment_name', 'attachment_size',
+    'content_type', 'md5', 'path', 'sender'
 ]
 
 
@@ -63,7 +64,7 @@ def read(db_connection, data_id=None):
                 if attachment['path'] \
                         and attachment not in res['attachments']:
                     res['attachments'].append(attachment)
-                res['recipients'] = list(recipients)
+                res['recipient'] = list(recipients)
 
             result.append(res)
 
