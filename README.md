@@ -1,6 +1,6 @@
 -=============================================================================-
 
-Email Collector Application Programming Interface
+             Email Collector Application Programming Interface
 
 -=============================================================================-
 
@@ -13,7 +13,9 @@ Basic HTTP Authorization supported and mandatory for all available application
 endpoints
 
 -=============================================================================-
+
 How to install and run the application:
+
 -=============================================================================-
 
 1. Create and activate virtual environment:
@@ -55,7 +57,9 @@ $ ./run.py --host=127.0.0.1 --port=5000 --debug
 
 
 -=============================================================================-
+
 How to use the application. Supported features.
+
 -=============================================================================-
 
 Upload emails.
