@@ -56,15 +56,18 @@ Also, a hidden argument can be used:
 $ ./run.py --host=127.0.0.1 --port=5000 --debug
 
 
+
+
 -=============================================================================-
 
 How to use the application. Supported features.
 
 -=============================================================================-
 
+
 * Upload emails.
 
-GET/POST /api/v1/email - Upload email files:
+/api/v1/email - methods GET/POST:
 
 curl -i -u login:pass -X POST http://127.0.0.1:5000/api/v1/email -F file=@filename
 
@@ -76,11 +79,13 @@ curl -i -u login:pass -X POST http://127.0.0.1:5000/api/v1/email -F file=@filena
 curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/all
 
 
-* Retrieve uploaded email by id:
+
+* Retrieve uploaded email by id.
 
 /api/v1/email/id - method GET.
 
 curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/id
+
 
 
 * Update uploaded email.
@@ -90,11 +95,13 @@ curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/id
 curl -i -u login:pass -H 'Content-Type: application/json' -X PUT -d '{"timestamp": "1", "body": "text", "subject": "text"}' http://127.0.0.1:5000/api/v1/email/id
 
 
+
 * Delete uploaded email.
 
 /api/v1/email/id - method DELETE:
 
 curl -i -u login:pass -X DELETE http://127.0.0.1:5000/api/v1/email/id
+
 
 
 * Download attachment from server.
