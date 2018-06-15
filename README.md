@@ -5,8 +5,8 @@
 -=============================================================================-
 
 This application was designed to parse uploaded emails and store such information
-as Sender, Recipients, Subject, Body, HTML, Timestamp, Attachments (name, size,
-content type, MD5, path to saved file on the server) on the server.
+in the database as Sender, Recipients, Subject, Body (text/plain), Body (text/html),
+Timestamp, Attachments (name, size, type, MD5, path to saved file on the server).
 User is able to upload emails through this API, read, update and delete them.
 Also, downloading back saved attachments supported.
 Basic HTTP Authorization supported and mandatory for all available application
