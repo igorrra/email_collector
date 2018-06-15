@@ -7,6 +7,7 @@ RESTful API for email collector
 import argparse
 import os
 import shutil
+import uuid
 
 import logging.config
 
@@ -57,6 +58,7 @@ logger = logging.getLogger(__name__)
 def upload_email():
     """Create new entries in database by parsing uploaded emails."""
     db = mysql.connect()
+    u_id = str(uuid.uuid4())
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
@@ -69,13 +71,15 @@ def upload_email():
         if uploaded_file and allowed_file(uploaded_file.filename):
             if not os.path.exists(app.config['UPLOAD_FOLDER']):
                 os.mkdir(app.config['UPLOAD_FOLDER'])
+            os.mkdir(os.path.join(app.config['UPLOAD_FOLDER'], u_id))
             file_name = secure_filename(uploaded_file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
+            file_path = os.path.join(
+                app.config['UPLOAD_FOLDER'], u_id, file_name
+            )
             uploaded_file.save(file_path)
             logger.debug('Uploaded email file was saved to %s',
                          app.config['UPLOAD_FOLDER'])
-            parsed = parse_raw_email(file_path)
-            shutil.rmtree((app.config['UPLOAD_FOLDER']))
+            parsed = parse_raw_email(file_path, u_id)
             if parsed and parsed.get('from'):
                 logger.info('Email was parsed successfully')
                 logger.debug('POST email data into corresponding tables')
@@ -127,20 +131,29 @@ def work_with_email_by_id(metadata_id):
                 params = attachments[0].get('path')
                 if params and len(params) >= 2:
                     params_split = params.split('/')
-                    path = params_split[0] + '/' + params_split[1]
+                    path = os.path.join(params_split[0], params_split[1])
+                    uploaded_path = os.path.join(
+                        app.config['UPLOAD_FOLDER'], params_split[1]
+                    )
                     if path and os.path.exists(path):
                         logger.debug('Delete attachment from %s called', path)
                         shutil.rmtree(path)
+                    if uploaded_path and os.path.exists(uploaded_path):
+                        logger.debug(
+                            'Delete uploaded email from %s called',
+                            uploaded_path
+                        )
+                        shutil.rmtree(uploaded_path)
         db = mysql.connect()
         result, st_code = delete(db, metadata_id)
         return make_response(jsonify({'Response': result}), st_code)
 
 
-@app.route('/api/v1/email/attachments/<directory>/<filename>')
+@app.route('/api/v1/email/<directory>/<subdirectory>/<filename>')
 @auth.login_required
-def download_attachment(directory=None, filename=None):
+def download_file(directory=None, subdirectory=None, filename=None):
     """Download attachment from server."""
-    path = 'attachments/' + directory + '/' + filename
+    path = os.path.join(directory, subdirectory, filename)
 
     if request.method == 'GET':
         try:

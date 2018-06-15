@@ -34,7 +34,7 @@ class NotSupportedMailFormat(Exception):
         Exception.__init__(self, msg)
 
 
-def parse_raw_email(path):
+def parse_raw_email(path, u_id):
     """Parse raw email file (RFC 822).
 
     Get and return email attributes and file attachments."""
@@ -47,7 +47,7 @@ def parse_raw_email(path):
                 )
 
         subject, timestamp, recipients = parse_header(msgobj)
-        attachments, body, html = parse_content(msgobj)
+        attachments, body, html = parse_content(msgobj, u_id)
 
         return {
             'subject': subject,
@@ -56,6 +56,7 @@ def parse_raw_email(path):
             'html': html,
             'from': parseaddr(msgobj.get('From'))[1],
             'to': recipients,
+            'source_email_path': path,
             'attachments': attachments
         }
 
@@ -97,11 +98,11 @@ def parse_header(msgobj):
     return subject, timestamp, recipients
 
 
-def parse_content(msgobj):
+def parse_content(msgobj, u_id):
     """Parse email content.
 
     Return attachments, body, html."""
-    attachments = parse_attachments(msgobj)
+    attachments = parse_attachments(msgobj, u_id)
     body = None
     html = None
 
@@ -133,11 +134,10 @@ def parse_content(msgobj):
     return attachments, body, html
 
 
-def parse_attachments(msgobj):
+def parse_attachments(msgobj, u_id):
     """Get and decode file attachments.
 
     Save attachments to corresponding files."""
-    u_id = str(uuid.uuid4())
     if not os.path.exists(ATT_PATH):
         os.mkdir(ATT_PATH)
 
@@ -163,6 +163,7 @@ def parse_attachments(msgobj):
                 attachment.path = None
                 attachment.md5 = None
                 attachment.size = None
+                attachment.source_email_path = None
 
                 try:
                     name = decode_header(part.get_filename())

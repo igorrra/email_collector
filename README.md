@@ -8,7 +8,7 @@ This application was designed to parse uploaded emails and store such informatio
 in the database as Sender, Recipients, Subject, Body (text/plain), Body (text/html),
 Timestamp, Attachments (name, size, type, MD5, path to saved file on the server).
 User is able to upload emails through this API, read, update and delete them.
-Also, downloading back saved attachments supported.
+Also, downloading back saved attachments and uploaded early entire emails supported.
 Basic HTTP Authorization supported and mandatory for all available application
 endpoints
 
@@ -96,7 +96,7 @@ curl -i -u login:pass -H 'Content-Type: application/json' -X PUT -d '{"timestamp
 
 
 
-* Delete uploaded email. All related saved attachments will be deleted as well.
+* Delete uploaded email. All related saved attachments and source email file will be deleted as well.
 
 /api/v1/email/id - method DELETE:
 
@@ -108,6 +108,16 @@ curl -i -u login:pass -X DELETE http://127.0.0.1:5000/api/v1/email/id
 
 /api/v1/email/attachments/directory/filename - method GET:
 
-('directory' and 'filename' attributes stored in the database and can be found while retrieving an email by id under the 'path' value)
+('directory' and 'filename' attributes stored in the database and can be found while retrieving an email by id under the 'path' attribute)
+
+curl -i -u login:pass GET http://127.0.0.1:5000/api/v1/email/attachments/directory/filename
+
+
+
+* Download uploaded entire email from server.
+
+/api/v1/email/uploaded_emails/directory/filename - method GET:
+
+('directory' and 'filename' attributes stored in the database and can be found while retrieving an email by id under the 'source_email_path' attribute)
 
 curl -i -u login:pass GET http://127.0.0.1:5000/api/v1/email/attachments/directory/filename

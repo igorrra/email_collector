@@ -9,7 +9,7 @@ def db_connection_wrapper(func):
             value = func(connection, *args, **kwargs)
         except Exception as error:
             connection.rollback()
-            return str(error.args[-1])
+            return str(error.args[-1]), 500
         else:
             connection.commit()
         finally:

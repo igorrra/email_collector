@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS `email_collector`.`metadata` (
 	`subject`	VARCHAR(256) COMMENT 'The subject of the email data object',
 	`body`		LONGTEXT COMMENT 'Body (text/plain) of the email data object',
 	`html`		LONGTEXT COMMENT 'Body (text/html) of the email data object',
+	`source_email_path`	NVARCHAR(260) COMMENT 'Path to the saved uploaded email',
 	`timestamp`	INT(11) NOT NULL COMMENT 'Timestamp that message was received at',
 	PRIMARY KEY (`id`),
 	INDEX `sender_idx` (`sender` ASC),

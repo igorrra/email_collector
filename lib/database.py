@@ -11,7 +11,7 @@ from lib.decorators import db_connection_wrapper
 
 RESTRICTED_COLUMNS = [
     'sender', 'recipient', 'attachment_name', 'attachment_size',
-    'content_type', 'md5', 'path'
+    'content_type', 'md5', 'path', 'source_email_path'
 ]
 
 
@@ -20,7 +20,7 @@ def read(db_connection, data_id=None):
     """Show report with all data by joining all tables."""
     cmd = 'SELECT m.id id, sender, recipient, subject, body, ' \
           'timestamp, attachment_name, attachment_size, content_type, ' \
-          'path, md5 ' \
+          'path, md5, source_email_path ' \
           'FROM metadata m ' \
           'LEFT JOIN attachments a ON m.id=a.metadata_id ' \
           'LEFT JOIN recipients r ON m.id=r.metadata_id'
@@ -48,7 +48,8 @@ def read(db_connection, data_id=None):
                 'sender': item[0].get('sender'),
                 'subject': item[0].get('subject'),
                 'body': item[0].get('body'),
-                'timestamp': item[0].get('timestamp')
+                'timestamp': item[0].get('timestamp'),
+                'source_email_path': item[0].get('source_email_path'),
             }
 
             for sub_item in item:
@@ -83,12 +84,14 @@ def post(db_connection, params):
     cur.execute("SET character_set_connection=utf8mb4")
 
     metadata_cmd = 'INSERT INTO metadata ' \
-                   '(sender, subject, body, html, timestamp) ' \
-                   'VALUES (%s, %s, %s, %s, %s)'
+                   '(sender, subject, body, html, ' \
+                   'timestamp, source_email_path) ' \
+                   'VALUES (%s, %s, %s, %s, %s, %s)'
     cur.execute(metadata_cmd,
                 (params.get('from'), params.get('subject'),
                  params.get('body'), params.get('html'),
-                 params.get('timestamp')))
+                 params.get('timestamp'),
+                 params.get('source_email_path')))
 
     last_id = db_connection.insert_id()
 
