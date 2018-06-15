@@ -13,7 +13,7 @@ import logging.config
 from ConfigParser import ConfigParser
 
 from flask import Flask
-from flask import flash, jsonify, make_response, redirect, request
+from flask import flash, jsonify, make_response, redirect, request, send_file
 
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
@@ -122,6 +122,18 @@ def work_with_email_by_id(metadata_id):
         logger.debug('Delete email for metadata id=%s called', metadata_id)
         result, st_code = delete(db, metadata_id)
         return make_response(jsonify({'Response': result}), st_code)
+
+
+@app.route('/api/v1/attachment/<path>')
+def download_attachment(path=None):
+    if not path:
+        return make_response(
+            jsonify({'Response': 'Path was not specified'}),
+            400)
+    try:
+        return send_file(path, as_attachment=True)
+    except Exception as e:
+        logger.exception(e)
 
 
 @app.errorhandler(404)
