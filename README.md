@@ -1,7 +1,7 @@
 -=============================================================================-
-|                                                                             |
-|             Email Collector Application Programming Interface               |
-|                                                                             |
+
+Email Collector Application Programming Interface
+
 -=============================================================================-
 
 This application designed to parse uploaded emails and store such information as
@@ -14,6 +14,7 @@ endpoints
 
 -=============================================================================-
 How to install and run the application:
+
 -=============================================================================-
 
 1. Create and activate virtual environment:
@@ -56,6 +57,7 @@ $ ./run.py --host=127.0.0.1 --port=5000 --debug
 
 -=============================================================================-
 How to use the application. Supported features.
+
 -=============================================================================-
 
 Upload emails.
