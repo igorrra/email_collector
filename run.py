@@ -120,6 +120,18 @@ def work_with_email_by_id(metadata_id):
         return make_response(jsonify({'Response': result}), st_code)
     elif request.method == 'DELETE':
         logger.debug('Delete email for metadata id=%s called', metadata_id)
+        res, status = read(db, metadata_id)
+        if status == 200:
+            attachments = res[0].get('attachments')
+            if attachments:
+                params = attachments[0].get('path')
+                if params and len(params) >= 2:
+                    params_split = params.split('/')
+                    path = params_split[0] + '/' + params_split[1]
+                    if path and os.path.exists(path):
+                        logger.debug('Delete attachment from %s called', path)
+                        shutil.rmtree(path)
+        db = mysql.connect()
         result, st_code = delete(db, metadata_id)
         return make_response(jsonify({'Response': result}), st_code)
 

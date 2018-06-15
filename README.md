@@ -96,7 +96,7 @@ curl -i -u login:pass -H 'Content-Type: application/json' -X PUT -d '{"timestamp
 
 
 
-* Delete uploaded email.
+* Delete uploaded email. All related saved attachments will be deleted as well.
 
 /api/v1/email/id - method DELETE:
 
