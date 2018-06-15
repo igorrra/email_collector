@@ -10,8 +10,8 @@ from lib.decorators import db_connection_wrapper
 
 
 RESTRICTED_COLUMNS = [
-    'recipient', 'attachment_name', 'attachment_size',
-    'content_type', 'md5', 'path', 'sender'
+    'sender', 'recipient', 'attachment_name', 'attachment_size',
+    'content_type', 'md5', 'path'
 ]
 
 
@@ -126,14 +126,17 @@ def delete(db_connection, data_id):
 def put(db_connection, data_id, params):
     """Update specified data in database."""
     cur = db_connection.cursor()
-    for key in params.keys():
-        if key in RESTRICTED_COLUMNS:
-            return 'Columns: %s are not editable' % RESTRICTED_COLUMNS, 400
-        put_cmd = 'UPDATE metadata m ' \
-                  'LEFT JOIN attachments a ON m.id=a.metadata_id ' \
-                  'LEFT JOIN  recipients r ON m.id=r.metadata_id ' \
-                  'SET %s="%s" WHERE m.id="%s";' \
-                  % (key, params[key], data_id)
-        cur.execute(put_cmd)
+    try:
+        for key in params.keys():
+            if key in RESTRICTED_COLUMNS:
+                return 'Columns: %s are not editable' % RESTRICTED_COLUMNS, 400
+            put_cmd = 'UPDATE metadata m ' \
+                      'LEFT JOIN attachments a ON m.id=a.metadata_id ' \
+                      'LEFT JOIN  recipients r ON m.id=r.metadata_id ' \
+                      'SET %s="%s" WHERE m.id="%s";' \
+                      % (key, params[key], data_id)
+            cur.execute(put_cmd)
 
-    return 'Affected rows: %s' % (cur.rowcount,), 200
+        return 'Affected rows: %s' % (cur.rowcount,), 200
+    except Exception as error:
+        return error.args[-1], 400

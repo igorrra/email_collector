@@ -1,6 +1,20 @@
-API for email upload, read, update and delete.
+-=============================================================================-
+|                                                                             |
+|             Email Collector Application Programming Interface               |
+|                                                                             |
+-=============================================================================-
 
-How to use:
+This application designed to parse uploaded emails and store such information as
+Sender, Recipients, Subject, Body, HTML, Timestamp, Attachments (name, size,
+content type, MD5, path to saved file on the server) on the server.
+User is able to upload emails through this API, read, update and delete them.
+Also, downloading back saved attachments supported.
+Basic HTTP Authorization supported and mandatory for all available application
+endpoints
+
+-=============================================================================-
+How to install and run the application:
+-=============================================================================-
 
 1. Create and activate virtual environment:
 
@@ -38,3 +52,51 @@ Also, a hidden argument can be used:
 --debug
 
 $ ./run.py --host=127.0.0.1 --port=5000 --debug
+
+
+-=============================================================================-
+How to use the application. Supported features.
+-=============================================================================-
+
+Upload emails.
+
+GET/POST /api/v1/email - Upload email files:
+
+curl -i -u <login>:<pass> -X POST http://<host>:<port>/api/v1/email -F file=@60.txt
+
+
+Retrieve uploaded emails.
+
+/api/v1/email/all - method GET:
+
+curl -i -u <login>:<pass> -X GET http://<host>:<port>/api/v1/email/all
+
+
+Retrieve uploaded email by id:
+
+/api/v1/email/<id> - method GET.
+
+curl -i -u <login>:<pass> -X GET http://<host>:<port>/api/v1/email/<id>
+
+
+Update uploaded email.
+
+/api/v1/email/<id> - method PUT:
+
+curl -i -u <login>:<pass> -H 'Content-Type: application/json' -X PUT -d '{"timestamp": "1", "body": "text", "subject": "text"}' http://<host>:<port>/api/v1/email/<id>
+
+
+Delete uploaded email.
+
+/api/v1/email/<id> - method DELETE:
+
+curl -i -u <login>:<pass> -X DELETE http://<host>:<port>/api/v1/email/<id>
+
+
+Download attachment from server.
+
+/api/v1/email/attachments/<directory>/<filename> - method GET *:
+
+curl -i -u <login>:<pass> GET http://<host>:<port>/api/v1/email/attachments/<directory>/<filename>
+
+* <directory>/<filename> attributes stored in the database and can be found while retrieving an email by id under the 'path' value
