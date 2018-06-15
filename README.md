@@ -4,8 +4,8 @@
 
 -=============================================================================-
 
-This application designed to parse uploaded emails and store such information as
-Sender, Recipients, Subject, Body, HTML, Timestamp, Attachments (name, size,
+This application was designed to parse uploaded emails and store such information
+as Sender, Recipients, Subject, Body, HTML, Timestamp, Attachments (name, size,
 content type, MD5, path to saved file on the server) on the server.
 User is able to upload emails through this API, read, update and delete them.
 Also, downloading back saved attachments supported.
@@ -66,41 +66,41 @@ Upload emails.
 
 GET/POST /api/v1/email - Upload email files:
 
-curl -i -u <login>:<pass> -X POST http://<host>:<port>/api/v1/email -F file=@60.txt
+curl -i -u login:pass -X POST http://127.0.0.1:5000/api/v1/email -F file=@filename
 
 
 Retrieve uploaded emails.
 
 /api/v1/email/all - method GET:
 
-curl -i -u <login>:<pass> -X GET http://<host>:<port>/api/v1/email/all
+curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/all
 
 
 Retrieve uploaded email by id:
 
-/api/v1/email/<id> - method GET.
+/api/v1/email/id - method GET.
 
-curl -i -u <login>:<pass> -X GET http://<host>:<port>/api/v1/email/<id>
+curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/id
 
 
 Update uploaded email.
 
-/api/v1/email/<id> - method PUT:
+/api/v1/email/id - method PUT:
 
-curl -i -u <login>:<pass> -H 'Content-Type: application/json' -X PUT -d '{"timestamp": "1", "body": "text", "subject": "text"}' http://<host>:<port>/api/v1/email/<id>
+curl -i -u login:pass -H 'Content-Type: application/json' -X PUT -d '{"timestamp": "1", "body": "text", "subject": "text"}' http://127.0.0.1:5000/api/v1/email/id
 
 
 Delete uploaded email.
 
-/api/v1/email/<id> - method DELETE:
+/api/v1/email/id - method DELETE:
 
-curl -i -u <login>:<pass> -X DELETE http://<host>:<port>/api/v1/email/<id>
+curl -i -u login:pass -X DELETE http://127.0.0.1:5000/api/v1/email/id
 
 
 Download attachment from server.
 
-/api/v1/email/attachments/<directory>/<filename> - method GET *:
+/api/v1/email/attachments/directory/filename - method GET *:
 
-curl -i -u <login>:<pass> GET http://<host>:<port>/api/v1/email/attachments/<directory>/<filename>
+curl -i -u login:pass GET http://127.0.0.1:5000/api/v1/email/attachments/directory/filename
 
-* <directory>/<filename> attributes stored in the database and can be found while retrieving an email by id under the 'path' value
+* 'directory' and 'filename' attributes stored in the database and can be found while retrieving an email by id under the 'path' value
