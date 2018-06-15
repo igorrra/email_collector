@@ -62,45 +62,45 @@ How to use the application. Supported features.
 
 -=============================================================================-
 
-Upload emails.
+* Upload emails.
 
 GET/POST /api/v1/email - Upload email files:
 
 curl -i -u login:pass -X POST http://127.0.0.1:5000/api/v1/email -F file=@filename
 
 
-Retrieve uploaded emails.
+* Retrieve uploaded emails.
 
 /api/v1/email/all - method GET:
 
 curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/all
 
 
-Retrieve uploaded email by id:
+* Retrieve uploaded email by id:
 
 /api/v1/email/id - method GET.
 
 curl -i -u login:pass -X GET http://127.0.0.1:5000/api/v1/email/id
 
 
-Update uploaded email.
+* Update uploaded email.
 
 /api/v1/email/id - method PUT:
 
 curl -i -u login:pass -H 'Content-Type: application/json' -X PUT -d '{"timestamp": "1", "body": "text", "subject": "text"}' http://127.0.0.1:5000/api/v1/email/id
 
 
-Delete uploaded email.
+* Delete uploaded email.
 
 /api/v1/email/id - method DELETE:
 
 curl -i -u login:pass -X DELETE http://127.0.0.1:5000/api/v1/email/id
 
 
-Download attachment from server.
+* Download attachment from server.
 
-/api/v1/email/attachments/directory/filename - method GET *:
+/api/v1/email/attachments/directory/filename - method GET:
+
+('directory' and 'filename' attributes stored in the database and can be found while retrieving an email by id under the 'path' value)
 
 curl -i -u login:pass GET http://127.0.0.1:5000/api/v1/email/attachments/directory/filename
-
-* 'directory' and 'filename' attributes stored in the database and can be found while retrieving an email by id under the 'path' value
