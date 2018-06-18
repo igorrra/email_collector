@@ -38,7 +38,8 @@ app.config['DEVELOPMENT'] = config.get('flask', 'development')
 app.config['SECRET_KEY'] = config.get('flask', 'secret_key')
 app.config['SESSION_TYPE'] = config.get('flask', 'session_type')
 app.config['DB_HOST'] = config.get('flask', 'db_host')
-app.config['UPLOAD_FOLDER'] = config.get('flask', 'upload_folder')
+app.config['UPLOAD_DIR'] = config.get('flask', 'upload_dir')
+app.config['ATTACHMENTS_DIR'] = config.get('flask', 'attachments_dir')
 app.config['MYSQL_DATABASE_USER'] = config.get('mysql', 'user')
 app.config['MYSQL_DATABASE_PASSWORD'] = config.get('mysql', 'password')
 app.config['MYSQL_DATABASE_DB'] = config.get('mysql', 'db')
@@ -69,17 +70,19 @@ def upload_email():
             flash('No selected file')
             return redirect(request.url)
         if uploaded_file and allowed_file(uploaded_file.filename):
-            if not os.path.exists(app.config['UPLOAD_FOLDER']):
-                os.mkdir(app.config['UPLOAD_FOLDER'])
-            os.mkdir(os.path.join(app.config['UPLOAD_FOLDER'], u_id))
+            if not os.path.exists(app.config['UPLOAD_DIR']):
+                os.mkdir(app.config['UPLOAD_DIR'])
+            os.mkdir(os.path.join(app.config['UPLOAD_DIR'], u_id))
             file_name = secure_filename(uploaded_file.filename)
             file_path = os.path.join(
-                app.config['UPLOAD_FOLDER'], u_id, file_name
+                app.config['UPLOAD_DIR'], u_id, file_name
             )
             uploaded_file.save(file_path)
             logger.debug('Uploaded email file was saved to %s',
-                         app.config['UPLOAD_FOLDER'])
-            parsed = parse_raw_email(file_path, u_id)
+                         app.config['UPLOAD_DIR'])
+            parsed = parse_raw_email(
+                file_path, u_id, app.config['ATTACHMENTS_DIR']
+            )
             if parsed and parsed.get('from'):
                 logger.info('Email was parsed successfully')
                 logger.debug('POST email data into corresponding tables')
@@ -125,25 +128,14 @@ def work_with_email_by_id(metadata_id):
     elif request.method == 'DELETE':
         logger.debug('Delete email for metadata id=%s called', metadata_id)
         res, status = read(db, metadata_id)
-        if status == 200:
-            attachments = res[0].get('attachments')
-            if attachments:
-                params = attachments[0].get('path')
-                if params and len(params) >= 2:
-                    params_split = params.split('/')
-                    path = os.path.join(params_split[0], params_split[1])
-                    uploaded_path = os.path.join(
-                        app.config['UPLOAD_FOLDER'], params_split[1]
-                    )
-                    if path and os.path.exists(path):
-                        logger.debug('Delete attachment from %s called', path)
-                        shutil.rmtree(path)
-                    if uploaded_path and os.path.exists(uploaded_path):
-                        logger.debug(
-                            'Delete uploaded email from %s called',
-                            uploaded_path
-                        )
-                        shutil.rmtree(uploaded_path)
+        if status == 200 and res[0].get('source_email_path'):
+            remove_saved_files(
+                res[0].get('source_email_path'),
+                [
+                    app.config['UPLOAD_DIR'],
+                    app.config['ATTACHMENTS_DIR']
+                ]
+            )
         db = mysql.connect()
         result, st_code = delete(db, metadata_id)
         return make_response(jsonify({'Response': result}), st_code)
@@ -196,6 +188,19 @@ def allowed_file(filename):
     """Check if uploaded file extension is allowed."""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EMAIL_EXTENSIONS
+
+
+def remove_saved_files(param, directories):
+    """Remove saved files (uploaded entire email and related
+    saved attachments)."""
+    if param:
+        for directory in directories:
+            path = os.path.join(
+                directory, param.split('/')[1]
+            )
+            if path and os.path.exists(path):
+                logger.debug('Delete %s called', path)
+                shutil.rmtree(path)
 
 
 def parse_args():

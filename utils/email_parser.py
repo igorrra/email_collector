@@ -8,7 +8,6 @@ import hashlib
 import os
 import re
 import time
-import uuid
 from StringIO import StringIO
 from email.utils import parseaddr
 
@@ -19,8 +18,6 @@ import dateutil.parser
 import MySQLdb
 
 
-ATT_TEMPLATE = '%s/%s'
-ATT_PATH = 'attachments/'
 ADDR_FIELDS = ['To', 'Cc', 'Bcc']
 
 
@@ -34,7 +31,7 @@ class NotSupportedMailFormat(Exception):
         Exception.__init__(self, msg)
 
 
-def parse_raw_email(path, u_id):
+def parse_raw_email(path, u_id, attachments_path):
     """Parse raw email file (RFC 822).
 
     Get and return email attributes and file attachments."""
@@ -47,7 +44,9 @@ def parse_raw_email(path, u_id):
                 )
 
         subject, timestamp, recipients = parse_header(msgobj)
-        attachments, body, html = parse_content(msgobj, u_id)
+        attachments, body, html = parse_content(
+            msgobj, u_id, attachments_path
+        )
 
         return {
             'subject': subject,
@@ -98,11 +97,11 @@ def parse_header(msgobj):
     return subject, timestamp, recipients
 
 
-def parse_content(msgobj, u_id):
+def parse_content(msgobj, u_id, attachments_path):
     """Parse email content.
 
     Return attachments, body, html."""
-    attachments = parse_attachments(msgobj, u_id)
+    attachments = parse_attachments(msgobj, u_id, attachments_path)
     body = None
     html = None
 
@@ -134,12 +133,12 @@ def parse_content(msgobj, u_id):
     return attachments, body, html
 
 
-def parse_attachments(msgobj, u_id):
+def parse_attachments(msgobj, u_id, attachments_path):
     """Get and decode file attachments.
 
     Save attachments to corresponding files."""
-    if not os.path.exists(ATT_PATH):
-        os.mkdir(ATT_PATH)
+    if not os.path.exists(attachments_path):
+        os.mkdir(attachments_path)
 
     attachments = []
 
@@ -152,8 +151,8 @@ def parse_attachments(msgobj, u_id):
             if content_disposition \
                     and 'attachment' or 'inline' in dispositions[0].lower():
 
-                if not os.path.exists(ATT_PATH + u_id):
-                    os.mkdir(ATT_PATH + u_id)
+                if not os.path.exists(os.path.join(attachments_path, u_id)):
+                    os.mkdir(os.path.join(attachments_path, u_id))
 
                 file_data = part.get_payload(decode=True)
 
@@ -178,8 +177,8 @@ def parse_attachments(msgobj, u_id):
                             attachment.name = value.replace('"', '')
 
                 if attachment.name:
-                    file_path = ATT_TEMPLATE % (
-                        ATT_PATH + u_id, attachment.name
+                    file_path = os.path.join(
+                        attachments_path, u_id, attachment.name
                     )
 
                     with open(file_path, 'wb') as destination_file:
