@@ -160,8 +160,7 @@ def download_file(directory=None, subdirectory=None, filename=None):
         except Exception as error:
             logger.exception(error)
             return make_response(
-                jsonify({'Response': "Selected path '%s' "
-                                     "does not exist" % path}), 400)
+                jsonify({'Response': error}), 400)
 
 
 @app.errorhandler(404)
