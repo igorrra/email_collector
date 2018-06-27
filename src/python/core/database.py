@@ -6,8 +6,7 @@ Work with DB in order to store and retrieve requested data.
 
 import collections
 
-from lib.decorators import db_connection_wrapper
-
+from src.python.core.utils import db_connection_wrapper
 
 RESTRICTED_COLUMNS = [
     'sender', 'recipient', 'attachment_name', 'attachment_size',

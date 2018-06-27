@@ -17,7 +17,6 @@ import email
 import dateutil.parser
 import MySQLdb
 
-
 ADDR_FIELDS = ['To', 'Cc', 'Bcc']
 
 

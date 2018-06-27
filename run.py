@@ -5,12 +5,10 @@ RESTful API for email collector
 """
 
 import argparse
+import logging.config
 import os
 import shutil
 import uuid
-
-import logging.config
-
 from ConfigParser import ConfigParser
 
 from flask import Flask
@@ -22,11 +20,12 @@ from pymysql.cursors import DictCursor
 from utils.email_parser import parse_raw_email
 from werkzeug.utils import secure_filename
 
-from lib.database import (
+from src.python.core.database import (
     post, delete, put, read
 )
+from src.python.core.email_parser import parse_raw_email
 
-CONFIG_PATH = 'config/config.cfg'
+CONFIG_PATH = 'etc/config.cfg'
 ALLOWED_EMAIL_EXTENSIONS = {'msg', 'txt'}
 
 config = ConfigParser()
@@ -94,7 +93,7 @@ def upload_email():
                 jsonify({'Response': 'Unsupported email content received'}),
                 415)
     try:
-        with open('app/templates/index.html', 'r') as index:
+        with open('www/static/index.html', 'r') as index:
             content = index.read()
     except IOError as exc:
         content = str(exc)

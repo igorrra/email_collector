@@ -1,4 +1,4 @@
-"""Database connection decorator."""
+"""Application utils."""
 
 
 def db_connection_wrapper(func):
