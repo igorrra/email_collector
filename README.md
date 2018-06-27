@@ -34,7 +34,7 @@ $ chmod a+x run.py
 
 4. Create 'email_collector' database structure:
 
-$ cd db
+$ cd db/email_collector
 
 mysql> source CREATE_DB.sql
 
