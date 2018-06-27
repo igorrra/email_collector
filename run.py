@@ -17,7 +17,6 @@ from flask import flash, jsonify, make_response, redirect, request, send_file
 from flask_httpauth import HTTPBasicAuth
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
-from utils.email_parser import parse_raw_email
 from werkzeug.utils import secure_filename
 
 from src.python.core.database import (
